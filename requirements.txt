@@ -25,6 +25,7 @@ yfinance>=0.2.40
 # Plotting + UI
 plotly>=5.20
 streamlit>=1.32
+matplotlib>=3.7        # required by pandas Styler.background_gradient()
 
 # Utilities
 pyyaml>=6.0

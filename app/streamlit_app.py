@@ -438,16 +438,21 @@ def tab_leaderboard():
     if sort_col in display.columns:
         display = display.sort_values(sort_col, ascending=False)
 
-    st.dataframe(
-        display.style
-            .format(fmt)
-            .background_gradient(subset=["f1_macro"] if "f1_macro" in display.columns else None,
-                                 cmap="YlGn")
-            .background_gradient(subset=["directional_accuracy"]
-                                 if "directional_accuracy" in display.columns else None,
-                                 cmap="YlOrBr"),
-        use_container_width=True,
-    )
+    # Try to render with color-graded styling (needs matplotlib via pandas).
+    # Falls back to a plain formatted table if matplotlib is missing or
+    # styling otherwise fails. We never want the leaderboard tab to crash
+    # over decorative shading.
+    try:
+        styled = display.style.format(fmt)
+        if "f1_macro" in display.columns:
+            styled = styled.background_gradient(subset=["f1_macro"], cmap="YlGn")
+        if "directional_accuracy" in display.columns:
+            styled = styled.background_gradient(
+                subset=["directional_accuracy"], cmap="YlOrBr")
+        st.dataframe(styled, use_container_width=True)
+    except (ImportError, Exception):
+        # Plain formatted table -- still readable, no colors
+        st.dataframe(display.style.format(fmt), use_container_width=True)
 
     # Key takeaways box
     st.markdown(f"""
@@ -794,13 +799,15 @@ def tab_live():
 
     c1, c2 = st.columns([3, 2])
     with c1:
-        st.dataframe(
-            df_pred.style.format(fmt)
-                .background_gradient(subset=["Pred. log return"], cmap="RdYlGn"),
-            use_container_width=True,
-            hide_index=True,
-            height=560,
-        )
+        # Defensive styling -- same fallback pattern as the leaderboard
+        try:
+            styled = df_pred.style.format(fmt).background_gradient(
+                subset=["Pred. log return"], cmap="RdYlGn")
+            st.dataframe(styled, use_container_width=True,
+                         hide_index=True, height=560)
+        except (ImportError, Exception):
+            st.dataframe(df_pred.style.format(fmt),
+                         use_container_width=True, hide_index=True, height=560)
     with c2:
         # Top-5 / bottom-5 breakdown
         st.markdown("**Top-5 LONG (highest predicted)**")
