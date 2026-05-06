@@ -603,19 +603,46 @@ def tab_attention():
     # Headline numbers
     c1, c2, c3, c4 = st.columns(4)
     if metrics is not None:
-        sim = metrics.get("attn_corr_similarity", np.array([np.nan]))
-        sim_mean = float(np.nanmean(sim)) if sim.size else float("nan")
-        c1.metric("Spearman ρ (attn vs corr)", f"{sim_mean:+.3f}")
+        # Different versions of the extraction script used different key names.
+        # Try the modern names first, fall back to legacy ('sim', 'att_shift',
+        # 'cor_shift'). Returning np.nan from missing keys is fine; we filter
+        # before calling nanmean to avoid the "Mean of empty slice" warning.
+        def _pick(*candidates):
+            for k in candidates:
+                if k in metrics and metrics[k].size:
+                    arr = metrics[k]
+                    if np.isfinite(arr).any():    # at least one non-NaN value
+                        return arr
+            return None
 
-        a_shift = metrics.get("attn_shift", np.array([np.nan]))
-        c_shift = metrics.get("corr_shift", np.array([np.nan]))
-        if a_shift.size and c_shift.size and float(np.nanmean(a_shift)) > 0:
-            ratio = float(np.nanmean(c_shift)) / float(np.nanmean(a_shift))
+        def _safe_mean(arr):
+            if arr is None: return float("nan")
+            return float(np.nanmean(arr))
+
+        sim     = _pick("attn_corr_similarity", "sim")
+        a_shift = _pick("attn_shift",           "att_shift")
+        c_shift = _pick("corr_shift",           "cor_shift")
+
+        sim_mean = _safe_mean(sim)
+        if not np.isnan(sim_mean):
+            c1.metric("Spearman ρ (attn vs corr)", f"{sim_mean:+.3f}")
+        else:
+            c1.metric("Spearman ρ (attn vs corr)", "—")
+
+        a_mean = _safe_mean(a_shift)
+        c_mean = _safe_mean(c_shift)
+        if not np.isnan(a_mean) and not np.isnan(c_mean) and a_mean > 0:
+            ratio = c_mean / a_mean
             c2.metric("Stability advantage", f"{ratio:.0f}×",
                       help="Correlation moves this much more than attention day-to-day")
-        c3.metric("Mean attention shift", f"{float(np.nanmean(a_shift)):.4f}",
+        else:
+            c2.metric("Stability advantage", "—")
+
+        c3.metric("Mean attention shift",
+                  f"{a_mean:.4f}" if not np.isnan(a_mean) else "—",
                   help="Frobenius norm of day-to-day attention change")
-        c4.metric("Mean correlation shift", f"{float(np.nanmean(c_shift)):.4f}",
+        c4.metric("Mean correlation shift",
+                  f"{c_mean:.4f}" if not np.isnan(c_mean) else "—",
                   help="Frobenius norm of day-to-day correlation change")
 
     st.markdown("")
