@@ -42,7 +42,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Color palette (same as slides)
+# Color palette (same as slides). Dark mode: cards are dark-navy with
+# ice-blue text, matching the slide deck's "midnight executive" theme.
 COLORS = {
     "navy":   "#1E2761",
     "ink":    "#0F1535",
@@ -51,10 +52,10 @@ COLORS = {
     "green":  "#2A9D8F",
     "red":    "#E76F51",
     "mute":   "#8C9AB7",
-    "border": "#DBE2F1",
-    "card":   "#F7F9FF",
-    "text":   "#1A1F36",
-    "muted":  "#606E89",
+    "border": "#2A3568",        # subtle dark navy border (was light)
+    "card":   "#1E2761",        # dark navy card bg (was light F7F9FF)
+    "text":   "#FFFFFF",        # white headers/body (was dark 1A1F36)
+    "muted":  "#8C9AB7",        # muted ice on dark bg (was 606E89 dark)
 }
 
 # Custom CSS to match the slide aesthetic
@@ -71,12 +72,12 @@ st.markdown(f"""
         border-radius: 6px;
     }}
     [data-testid="stMetricValue"] {{
-        color: {COLORS['navy']};
+        color: {COLORS['ice']};
         font-family: 'Georgia', serif;
         font-weight: 700;
     }}
     [data-testid="stMetricLabel"] {{
-        color: {COLORS['muted']};
+        color: {COLORS['mute']};
         font-size: 0.85rem;
     }}
     .stTabs [data-baseweb="tab-list"] {{ gap: 8px; }}
@@ -85,18 +86,18 @@ st.markdown(f"""
         border-radius: 6px 6px 0 0;
         padding: 10px 18px;
         font-weight: 600;
-        color: {COLORS['navy']};
+        color: {COLORS['ice']};
     }}
     .stTabs [data-baseweb="tab"] p {{
-        color: {COLORS['navy']} !important;
+        color: {COLORS['ice']} !important;
         font-weight: 600 !important;
     }}
     .stTabs [aria-selected="true"] {{
-        background-color: {COLORS['navy']};
-        color: white;
+        background-color: {COLORS['gold']};
+        color: {COLORS['ink']};
     }}
     .stTabs [aria-selected="true"] p {{
-        color: white !important;
+        color: {COLORS['ink']} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -325,7 +326,7 @@ def tab_overview():
     with c1:
         st.markdown(f"""
         <div style="background: {COLORS['card']}; padding: 18px; border-radius: 6px;
-                    border-left: 4px solid {COLORS['navy']}; height: 200px;">
+                    border-left: 4px solid {COLORS['ice']}; height: 200px;">
             <div style="color: {COLORS['gold']}; font-size: 0.75rem; font-weight: 700;
                         letter-spacing: 0.15em;">1. THE MODEL</div>
             <h4 style="margin: 6px 0; color: {COLORS['text']};">Cross-Asset Transformer</h4>
@@ -715,7 +716,14 @@ def tab_live():
 
     bundle = load_data_bundle()
     if bundle is None:
-        st.warning("⚠️ Couldn't load data bundle. The artifacts/data/bundle.npz file may be missing.")
+        st.warning("⚠️ Couldn't load data bundle. The app expects three files in "
+                   "`artifacts/data/`: `arrays.npz`, `close_prices.csv`, and "
+                   "`meta.json`. Run `python scripts/01_build_data.py` to "
+                   "regenerate them, or check that they were pushed to GitHub.")
+        if "_load_errors" in st.session_state:
+            with st.expander("Debug details"):
+                for err in st.session_state["_load_errors"]:
+                    st.text(err)
         return
 
     loaded = load_transformer_model()
