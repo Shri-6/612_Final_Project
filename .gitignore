@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# Project artifacts (large, regenerable)
+artifacts/data/
+artifacts/models/
+artifacts/predictions/
+artifacts/attention/
+artifacts/figures/
+
+# Notebooks scratch
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

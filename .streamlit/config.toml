@@ -1,0 +1,20 @@
+# =============================================================================
+# Streamlit configuration
+# Light theme that matches our slide deck (navy + ice + gold accent).
+# Forcing 'base = light' avoids the white-on-white issues from dark mode.
+# =============================================================================
+[theme]
+base = "light"
+primaryColor = "#1E2761"          # navy (buttons, slider, headers)
+backgroundColor = "#FFFFFF"       # main page bg
+secondaryBackgroundColor = "#F7F9FF"   # card / sidebar bg
+textColor = "#1A1F36"             # body text
+font = "sans serif"
+
+[server]
+headless = true
+runOnSave = false
+fileWatcherType = "none"          # less CPU on shared hosts
+
+[browser]
+gatherUsageStats = false
